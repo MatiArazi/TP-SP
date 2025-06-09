@@ -310,8 +310,8 @@ def format_idt_entry(entry_bytes):
         entry_type = entry[5] & 0x1F
 
         segsel_idx = entry_segsel >> 3
-        segsel_rpl = (entry_segsel & 0x06) >> 1
-        segsel_ti = bool(entry_segsel & 0x01)
+        segsel_rpl = entry_segsel & 0x0003
+        segsel_ti = bool(entry_segsel & 0x0004)
         segsel = f'{"ldt" if segsel_ti else "gdt"}[{segsel_idx}] (RPL={segsel_rpl})'
 
         return [f'Offset: {format_address(entry_offset)},',
