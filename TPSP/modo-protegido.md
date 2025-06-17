@@ -46,13 +46,42 @@ Las preguntas a continuación las pueden responder inline o en otro archivo mark
 
 1. Explorando el manual Intel *Volumen 3: System Programming. Sección 2.2 Modes of Operation*. ¿A qué nos referimos con modo real y con modo protegido en un procesador Intel? ¿Qué particularidades tiene cada modo?
 
+> **Respuesta:** En un procesador Intel, el **modo real** es el modo de operación heredado del 8086, en el cual el procesador puede acceder únicamente a 1 MiB de memoria, sin protección ni multitarea, usando segmentación básica. Es el modo en que arranca el procesador tras un encendido o reset. Por otro lado, el **modo protegido** es el modo nativo de la arquitectura IA-32 y permite acceso a hasta 4 GB de memoria (o más con extensiones), ofrece protección de memoria, niveles de privilegio, soporte para multitarea, segmentación avanzada y paginación. Este modo es esencial para ejecutar sistemas operativos modernos con seguridad y estabilidad.
+
 2. Comenten en su equipo, ¿Por qué debemos hacer el pasaje de modo real a modo protegido? ¿No podríamos simplemente tener un sistema operativo en modo real? ¿Qué desventajas tendría?
+
+> **Respuesta:** Debemos pasar de modo real a modo protegido porque el modo real es muy limitado: permite acceder solo a 1 MiB de memoria, no ofrece protección entre procesos, ni soporte para multitarea o niveles de privilegio. Estas restricciones impiden construir un sistema operativo moderno, seguro y estable. El modo protegido, en cambio, permite acceder a más memoria, implementar mecanismos de protección, separar espacios de usuario y kernel, y manejar múltiples tareas de forma segura. Mantener un sistema en modo real implicaría grandes riesgos de estabilidad y seguridad, además de una gran limitación funcional.
+
 
 Anteriormente, detallamos que la memoria es un arreglo continuo de bytes y que podemos segmentarla de acuerdo a tamaño, nivel de protección y uso. Debemos indicar al procesador la descripción de los segmentos, es decir, cómo están conformados los segmentos. Los ejercicios a continuación tienen que ver con el armado de la tabla de segmentos.
 
 3. Busquen el manual *volumen 3 de Intel en la sección 3.4.5 Segment Descriptors*. ¿Qué es la GDT? ¿Cómo es el formato de un descriptor de segmento, bit a bit? Expliquen brevemente para qué sirven los campos *Limit*, *Base*, *G*, *P*, *DPL*, *S*. También pueden referirse a los slides de la clase teórica, aunque recomendamos que se acostumbren a consultar el manual.
+
+> **Respuesta:**
+> La **GDT** (Global Descriptor Table) es una estructura que contiene **descriptores de segmento**, que indican al procesador cómo debe acceder a diferentes regiones de memoria.
+> Cada descriptor define el comienzo, tamaño y permisos de un segmento, y es clave para implementar protección y separación entre código, datos y distintos niveles de privilegio.
+> Un descriptor de segmento ocupa 8 bytes y se compone de varios campos:
+> - **Limit**: determina el tamaño del segmento. Se construye con 20 bits y, dependiendo del bit **G**, puede expresarse en bytes o en bloques de 4 KB.
+> - **Base**: es la dirección base del segmento dentro del espacio de direcciones lineales, formada por tres campos de 16, 8 y 8 bits que juntos componen un valor de 32 bits.
+> - **G (Granularity)**: indica si el límite se interpreta en bytes (0) o en páginas de 4 KB (1).
+> - **P (Present)**: especifica si el segmento está presente en memoria (1) o no (0). Si no está presente, se lanza una excepción.
+> - **DPL (Descriptor Privilege Level)**: define el nivel de privilegio del segmento, entre 0 (más privilegiado) y 3 (menos privilegiado).
+> - **S (Descriptor Type)**: indica si el descriptor es de sistema (0) o de código/datos (1).
+> - **D/B (Default/Big)**: si está en 1, el segmento opera en modo de 32 bits; si está en 0, opera en modo de 16 bits.
+> Estos campos permiten implementar protección de memoria, multitarea segura y separación entre el kernel y los programas de usuario.
+
     
 4. La tabla de la sección 3.4.5.1 *Code- and Data-Segment Descriptor Types* del volumen 3 del manual del Intel nos permite completar el *Type*, los bits 11, 10, 9, 8. ¿Qué combinación de bits tendríamos que usar si queremos especificar un segmento para ejecución y lectura de código?
+
+> **Respuesta:**
+> Para especificar un segmento para **ejecución y lectura de código** en un descriptor de segmento, debemos usar la combinación de bits **Type = 1010 (binario)**, es decir:
+> - **Bit 11 (E)** = 1 → indica que es un segmento de código (executable)
+> - **Bit 10 (R)** = 0 → no es conforming (lo normal para código no compartido entre niveles)
+> - **Bit 9 (A)** = 1 → accesado (el procesador lo marca automáticamente la primera vez que se usa)
+> - **Bit 8** = 0 → indica que no es una instrucción que solo se puede ejecutar (sino que también se puede leer)
+>
+> Esta combinación en binario `1010` equivale a **decimal 10** en la tabla del manual de Intel (sección 3.4.5.1). El descriptor con ese tipo representa un segmento de **ejecución y lectura de código no conforming**, lo cual es el caso típico para código en modo protegido, ya que impide que segmentos de menor privilegio lo ejecuten directamente.
+
 
 ![](img/resolucion-dir-logica.png)
 
@@ -77,6 +106,10 @@ Recuerden que el límite es el último valor accesible dentro del segmento (es i
 Ahora, trabajemos con el código provisto por la cátedra. Vamos a completar la tabla de segmentos y cargar los descriptores de segmento. Hemos provisto estructuras en C que permiten simplificar la especificación de los campos de cada descriptor.
 
 6. En el archivo `gdt.h` observen las estructuras: `struct gdt_descriptor_t` y el `struct gdt_entry_t`. ¿Qué creen que contiene la variable `extern gdt_entry_t gdt;` y `extern gdt_descriptor_t GDT_DESC;`?
+
+> **Respuesta:**
+> La variable `extern gdt_entry_t gdt[]` representa el **arreglo de entradas de la GDT**, es decir, cada uno de los **descriptores de segmento** definidos en el sistema. Allí se almacenan los campos como base, límite, tipo, privilegio, etc., para cada segmento (por ejemplo: código kernel, datos kernel, código usuario, datos usuario).
+> Por otro lado, `extern gdt_descriptor_t GDT_DESC` es una estructura especial que guarda **la dirección base y el tamaño total de la GDT**, en el formato que espera la instrucción `lgdt`. Esta variable es usada en ensamblador para **cargar la GDT en el registro GDTR del procesador**, permitiendo que el sistema empiece a usar la segmentación definida.
 
 7. Buscar en el Volumen 3 del manual de Intel, sección 3.4.2 *Segment Selectors* el formato de los selectores de segmento. Observar en el archivo `defines.h` las constantes con los valores de distintos selectores de segmento posibles. Completen los defines faltantes en `defines.h` y entiendan la utilidad de las macros allí definidas. 
    **USAR LAS MACROS** para definir los campos de los entries de la gdt. En lo posible, no hardcodeen los números directamente en los campos.
