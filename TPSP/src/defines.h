@@ -40,10 +40,10 @@ TALLER System Programming - Arquitectura y Organizacion de Computadoras - FCEN
  * Definirlos a partir de los índices de la GDT, definidos más arriba 
  * Hint: usar operadores "<<" y "|" (shift y or) */
 
-//#define GDT_CODE_0_SEL ??
-//#define GDT_DATA_0_SEL ??
-//#define GDT_CODE_3_SEL ??
-//#define GDT_DATA_3_SEL ??
+#define GDT_CODE_0_SEL ((GDT_IDX_CODE_0 << 3) | 0x0)
+#define GDT_DATA_0_SEL ((GDT_IDX_DATA_0 << 3) | 0x0)
+#define GDT_CODE_3_SEL ((GDT_IDX_CODE_3 << 3) | 0x3)
+#define GDT_DATA_3_SEL ((GDT_IDX_DATA_3 << 3) | 0x3)
 
 
 // Macros para trabajar con segmentos de la GDT.
@@ -61,10 +61,10 @@ TALLER System Programming - Arquitectura y Organizacion de Computadoras - FCEN
 #define GDT_BASE_HIGH(base) (uint8_t)((((uint32_t)(base)) >> 24) & 0xFF)
 
 /* COMPLETAR - Valores de atributos */ 
-//#define DESC_CODE_DATA ??
-//#define DESC_SYSTEM    ??
-//#define DESC_TYPE_EXECUTE_READ ??
-//#define DESC_TYPE_READ_WRITE   ??
+#define DESC_CODE_DATA 1
+#define DESC_SYSTEM 0
+#define DESC_TYPE_EXECUTE_READ 0xA
+#define DESC_TYPE_READ_WRITE 0x2
 
 /* COMPLETAR - Tamaños de segmentos */ 
 //#define FLAT_SEGM_SIZE   ??

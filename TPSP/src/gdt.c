@@ -40,6 +40,75 @@ gdt_entry_t gdt[GDT_COUNT] = {
       macros allí definidas.
       Tomen el descriptor nulo como ejemplo y definan el resto.
      */
+    [GDT_IDX_CODE_0] = 
+      {
+        .limit_15_0 = GDT_LIMIT_LOW(FLAT_SEGM_SIZE),
+        .base_15_0 = GDT_BASE_LOW(0x0),
+        .base_23_16 = GDT_BASE_MID(0x0),
+        .type = DESC_TYPE_EXECUTE_READ,
+        .s = DESC_CODE_DATA,
+        .dpl = 0,
+        .p = 1,
+        .limit_19_16 = GDT_LIMIT_HIGH(FLAT_SEGM_SIZE),
+        .avl = 0,
+        .l = 0,
+        .db = 1,
+        .g = 1,
+        .base_31_24 = GDT_BASE_HIGH(0x0),
+      },
+
+    [GDT_IDX_CODE_3] = 
+      {
+        .limit_15_0 = GDT_LIMIT_LOW(FLAT_SEGM_SIZE),
+        .base_15_0 = GDT_BASE_LOW(0x0),
+        .base_23_16 = GDT_BASE_MID(0x0),
+        .type = DESC_TYPE_EXECUTE_READ,
+        .s = DESC_CODE_DATA,
+        .dpl = 3,
+        .p = 1,
+        .limit_19_16 = GDT_LIMIT_HIGH(FLAT_SEGM_SIZE),
+        .avl = 0,
+        .l = 0,
+        .db = 1,
+        .g = 1,
+        .base_31_24 = GDT_BASE_HIGH(0x0),
+    },
+
+    [GDT_IDX_DATA_0] = 
+      {
+          .limit_15_0 = GDT_LIMIT_LOW(FLAT_SEGM_SIZE),
+          .base_15_0 = GDT_BASE_LOW(0x0),
+          .base_23_16 = GDT_BASE_MID(0x0),
+          .type = DESC_TYPE_READ_WRITE,
+          .s = DESC_CODE_DATA,
+          .dpl = 0,
+          .p = 1,
+          .limit_19_16 = GDT_LIMIT_HIGH(FLAT_SEGM_SIZE),
+          .avl = 0,
+          .l = 0,
+          .db = 1,
+          .g = 1,
+          .base_31_24 = GDT_BASE_HIGH(0x0),
+      },
+
+  /* Segmento de datos nivel 3 */
+    [GDT_IDX_DATA_3] = 
+      {
+          .limit_15_0 = GDT_LIMIT_LOW(FLAT_SEGM_SIZE),
+          .base_15_0 = GDT_BASE_LOW(0x0),
+          .base_23_16 = GDT_BASE_MID(0x0),
+          .type = DESC_TYPE_READ_WRITE,
+          .s = DESC_CODE_DATA,
+          .dpl = 3,
+          .p = 1,
+          .limit_19_16 = GDT_LIMIT_HIGH(FLAT_SEGM_SIZE),
+          .avl = 0,
+          .l = 0,
+          .db = 1,
+          .g = 1,
+          .base_31_24 = GDT_BASE_HIGH(0x0),
+      },
+
     
 };
 
