@@ -4,15 +4,20 @@
 ; ==============================================================================
 
 %include "print.mac"
+extern enable_a20        ; la rutina en a20.asm
+extern GDT_DESC          ; la estructura con base y tamaño de la GDT
+extern start_rm_msg
+extern start_rm_len
+
 
 global start
 
 
 ; COMPLETAR - Agreguen declaraciones extern según vayan necesitando
-
+%define C_FG_LIGHT_GREEN 0xA
 ; COMPLETAR - Definan correctamente estas constantes cuando las necesiten
-;%define CS_RING_0_SEL ??   
-;%define DS_RING_0_SEL ??   
+%define CS_RING_0_SEL 0x08
+%define DS_RING_0_SEL 0x18
 
 
 BITS 16
@@ -28,6 +33,7 @@ start_rm_len equ    $ - start_rm_msg
 start_pm_msg db     'Iniciando kernel en Modo Protegido'
 start_pm_len equ    $ - start_pm_msg
 
+
 ;;
 ;; Seccion de código.
 ;; -------------------------------------------------------------------------- ;;
@@ -36,7 +42,7 @@ start_pm_len equ    $ - start_pm_msg
 BITS 16
 start:
     ; COMPLETAR - Deshabilitar interrupciones
-
+    cli
 
     ; Cambiar modo de video a 80 X 50
     mov ax, 0003h
@@ -48,17 +54,24 @@ start:
     ; COMPLETAR - Imprimir mensaje de bienvenida - MODO REAL
     ; (revisar las funciones definidas en print.mac y los mensajes se encuentran en la
     ; sección de datos)
+    print_text_rm start_rm_msg, start_rm_len, C_FG_LIGHT_GREEN, 0, 0
 
     ; COMPLETAR - Habilitar A20
     ; (revisar las funciones definidas en a20.asm)
+    call enable_a20
 
     ; COMPLETAR - Cargar la GDT
+    lgdt [GDT_DESC]
 
     ; COMPLETAR - Setear el bit PE del registro CR0
+    mov eax, cr0
+    or  eax, 1
+    mov cr0, eax
 
     ; COMPLETAR - Saltar a modo protegido (far jump)
     ; (recuerden que un far jmp se especifica como jmp CS_selector:address)
     ; Pueden usar la constante CS_RING_0_SEL definida en este archivo
+    jmp CS_RING_0_SEL:modo_protegido
 
 BITS 32
 modo_protegido:

@@ -123,7 +123,10 @@ Ahora, trabajemos con el código provisto por la cátedra. Vamos a completar la 
     *Hint*: investiguen para qué puede servir la instrucción **cli** en el manual 2.
 
 10. Busquen qué hace la instrucción LGDT en el Volumen 2 del manual de Intel. Expliquen con sus palabras para qué sirve esta instrucción. En el código, ¿qué estructura indica donde está almacenada la dirección desde la cual se carga la GDT y su tamaño? ¿dónde se inicializa en el código?
-
+> **Respuesta:**
+> La instrucción `LGDT m` (Load Global Descriptor Table Register) lee desde la memoria en la dirección `m` un descriptor de 6 bytes —16 bits de límite y 32 bits de base— y lo carga en el registro interno GDTR del procesador.
+> De esta forma el CPU sabe **dónde** comienza la GDT en memoria y **cuál** es su tamaño, información necesaria para traducir todas las referencias a segmentos en modo protegido.
+> En nuestro código esa información se almacena en la variable `GDT_DESC` de tipo `gdt_descriptor_t`, que tiene precisamente dos campos: `size` (el límite de la tabla) y `address` (la dirección base).
 11. Completen el archivo `kernel.asm` en la sección de cargar la GDT usando lo averiguado en el punto 8 para cargar la GDT.
 
 12. Lean la guía de Qemu+gdb. Inserten un breakpoint luego de cargar la GDT. Podemos ahora comprobar el arranque de la máquina hasta ese punto. Para eso hay que compilar con `make` e iniciar `qemu`.
